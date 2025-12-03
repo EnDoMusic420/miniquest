@@ -1127,3 +1127,233 @@ input[type="number"]:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
 }
+/* ============================================
+   CATEGORY ICONS
+   ============================================ */
+
+.tag[data-cat="home"]::before,
+.quest-meta[data-cat="home"]::before {
+  content: "🏠 ";
+}
+
+.tag[data-cat="work"]::before,
+.quest-meta[data-cat="work"]::before {
+  content: "📚 ";
+}
+
+.tag[data-cat="selfcare"]::before,
+.quest-meta[data-cat="selfcare"]::before {
+  content: "🌿 ";
+}
+
+.tag[data-cat="social"]::before,
+.quest-meta[data-cat="social"]::before {
+  content: "🤝 ";
+}
+
+/* icon für Kategorie-Tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+}
+
+.quest-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+/* ======================================
+   GLOBAL ICONS FOR MINIQUEST UI
+   ====================================== */
+
+/* LEVEL ICON */
+.level-label::before {
+  content: "🧩 ";
+}
+
+/* XP BAR LABEL */
+.xp-label::before {
+  content: "⭐ ";
+}
+
+/* STREAK */
+.streak-main::before {
+  content: "🔥 ";
+}
+
+/* DAILY GOAL LABEL */
+.daily-goal-control label::before {
+  content: "🎯 ";
+}
+
+/* ENERGY ICON */
+.tag-energy::before {
+  content: "⚡ ";
+}
+
+/* BUTTON ICONS */
+
+/* Add Quest */
+#add-quest-btn::before {
+  content: "➕ ";
+}
+
+/* Zufällige Quest */
+#pick-quest-btn::before {
+  content: "🎲 ";
+}
+
+/* Inspiration */
+#inspire-quest-btn::before {
+  content: "💡 ";
+}
+
+/* Preset Quest */
+#preset-quest-btn::before {
+  content: "📌 ";
+}
+
+/* Preset Reward */
+#preset-reward-btn::before {
+  content: "🎁 ";
+}
+
+/* Complete Button */
+.complete-btn::before {
+  content: "✔️ ";
+}
+
+/* Filter Chips */
+.filter-chip[data-filter="open"]::before {
+  content: "📂 ";
+}
+.filter-chip[data-filter="done"]::before {
+  content: "✅ ";
+}
+.filter-chip[data-filter="all"]::before {
+  content: "📁 ";
+}
+
+/* Quest Actions */
+.small-btn.delete::before {
+  content: "🗑️ ";
+}
+.small-btn.complete::before {
+  content: "✔️ ";
+}
+.small-btn.undo::before {
+  content: "🔄 ";
+}
+
+/* STATS */
+.stat-card .stat-title::before {
+  content: "📊 ";
+  font-size: 1rem;
+  margin-right: 4px;
+}
+
+/* ACHIEVEMENTS */
+.achievement-title::before {
+  content: "🏆 ";
+  font-size: 1rem;
+  margin-right: 2px;
+}
+
+/* COZY/LIGHT COMPATIBILITY FIXES */
+.theme-light .stat-card .stat-title::before,
+.theme-cosy .stat-card .stat-title::before {
+  filter: brightness(0.8);
+}
+/* ======================================
+   ICON ANIMATIONS
+   ====================================== */
+
+/* Icons müssen "richtig" sein, damit transform wirkt */
+#add-quest-btn::before,
+#pick-quest-btn::before,
+#inspire-quest-btn::before,
+#preset-quest-btn::before,
+#preset-reward-btn::before,
+.complete-btn::before,
+.small-btn.complete::before,
+.small-btn.undo::before,
+.small-btn.delete::before {
+  display: inline-block;
+}
+
+/* Pulse-Animation (z.B. Add, Complete, Presets) */
+.icon-pulse::before {
+  animation: iconPulse 0.32s ease-out;
+}
+
+@keyframes iconPulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Wiggle-Animation (z.B. Zufällige Quest / Inspiration) */
+.icon-wiggle::before {
+  animation: iconWiggle 0.38s ease-out;
+}
+
+@keyframes iconWiggle {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-14deg); }
+  50%  { transform: rotate(10deg); }
+  75%  { transform: rotate(-6deg); }
+  100% { transform: rotate(0deg); }
+}
+/* ===============================
+   LIGHT MODE: Preset-Buttons & Tags
+   =============================== */
+
+.theme-light .small-pill-btn {
+  background: #f9fafb;
+  color: var(--text-soft);
+  border-color: var(--border);
+}
+
+.theme-light .small-pill-btn:hover {
+  background: #e5e7eb;
+  color: var(--text-main);
+  box-shadow: 0 8px 20px rgba(148, 163, 184, 0.35);
+}
+
+/* Tags bei "Heute"-Quest (Kategorie/Energie) */
+.theme-light .tag {
+  background: #f3f4f6;
+  border-color: var(--border);
+  color: var(--text-soft);
+}
+
+/* Meta-Text in den Quest-Karten (Social / Energie etc.) */
+.theme-light .quest-meta {
+  color: var(--text-soft);
+}
+
+/* ===============================
+   COSY MODE: Preset-Buttons & Tags
+   =============================== */
+
+.theme-cosy .small-pill-btn {
+  background: #f3e4d2;
+  color: var(--text-soft);
+  border-color: var(--border);
+}
+
+.theme-cosy .small-pill-btn:hover {
+  background: #e7d3b5;
+  color: var(--text-main);
+  box-shadow: 0 8px 20px rgba(150, 120, 70, 0.35);
+}
+
+.theme-cosy .tag {
+  background: #f3e4d2;
+  border-color: var(--border);
+  color: var(--text-soft);
+}
+
+.theme-cosy .quest-meta {
+  color: var(--text-soft);
+}

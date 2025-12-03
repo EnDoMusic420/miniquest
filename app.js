@@ -137,6 +137,20 @@ const celebrationEl = document.getElementById("celebration");
 const celebrationTextEl = document.getElementById("celebration-text");
 const celebrationCloseBtn = document.getElementById("celebration-close-btn");
 
+// Kleine Helper-Funktion für Icon-Animation auf Buttons
+function attachIconAnim(button, cls) {
+  if (!button) return;
+  button.addEventListener("click", () => {
+    button.classList.remove(cls);
+    void button.offsetWidth; // Force Reflow, damit Animation neu startet
+    button.classList.add(cls);
+    setTimeout(() => {
+      button.classList.remove(cls);
+    }, 350);
+  });
+}
+
+
 // ============================
 // Helpers: Datum
 // ============================
@@ -600,6 +614,7 @@ function renderQuestsList() {
 
     const meta = document.createElement("div");
     meta.className = "quest-meta";
+	meta.dataset.cat = q.category;
     meta.textContent = `${categoryLabel(q.category)} · Energie: ${energyLabel(q.energy)}`
       + (q.reward ? ` · Belohnung: ${q.reward}` : "");
 
@@ -612,7 +627,15 @@ function renderQuestsList() {
     const toggleBtn = document.createElement("button");
     toggleBtn.className = "small-btn " + (q.done ? "undo" : "complete");
     toggleBtn.textContent = q.done ? "wieder offen" : "erledigt";
-    toggleBtn.addEventListener("click", () => toggleQuestDone(q.id));
+    toggleBtn.addEventListener("click", () => {
+  toggleBtn.classList.remove("icon-pulse");
+  void toggleBtn.offsetWidth;
+  toggleBtn.classList.add("icon-pulse");
+  setTimeout(() => toggleBtn.classList.remove("icon-pulse"), 350);
+
+  toggleQuestDone(q.id);
+});
+
 
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "small-btn delete";
@@ -647,10 +670,11 @@ function renderTodayQuest(quest) {
 
   const catTag = document.createElement("span");
   catTag.className = "tag";
+  catTag.dataset.cat = quest.category;
   catTag.textContent = categoryLabel(quest.category);
 
   const energyTag = document.createElement("span");
-  energyTag.className = "tag";
+  energyTag.className = "tag tag-energy";
   energyTag.textContent = `Energie: ${energyLabel(quest.energy)}`;
 
   tagRow.appendChild(catTag);
@@ -672,10 +696,17 @@ function renderTodayQuest(quest) {
   btn.disabled = quest.done;
 
   btn.addEventListener("click", () => {
-    if (!quest.done) {
-      completeQuest(quest.id, true);
-    }
-  });
+  if (!quest.done) {
+    // Icon-Pulse auf dem Button
+    btn.classList.remove("icon-pulse");
+    void btn.offsetWidth;
+    btn.classList.add("icon-pulse");
+    setTimeout(() => btn.classList.remove("icon-pulse"), 350);
+
+    completeQuest(quest.id, true);
+  }
+});
+
 
   todayQuestEl.appendChild(btn);
 }
@@ -885,6 +916,12 @@ if (pickQuestBtn) {
 if (inspireQuestBtn) {
   inspireQuestBtn.addEventListener("click", showInspirationQuest);
 }
+// Icon-Animationen für Buttons
+attachIconAnim(addQuestBtn, "icon-pulse");
+attachIconAnim(pickQuestBtn, "icon-wiggle");
+attachIconAnim(inspireQuestBtn, "icon-wiggle");
+attachIconAnim(presetQuestBtn, "icon-pulse");
+attachIconAnim(presetRewardBtn, "icon-pulse");
 
 filterChips.forEach(chip => {
   chip.addEventListener("click", () => {
