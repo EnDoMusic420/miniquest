@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiniQuest – mach aus Aufgaben kleine Quests</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div>
+        <h1>MiniQuest</h1>
+        <p>Verwandel deinen Todo-Stapel in kleine Quests mit Levelsystem.</p>
+      </div>
+      <div class="level-box">
+        <div class="level-label">Level</div>
+        <div id="level-badge">1</div>
+        <div class="xp-bar">
+          <div id="xp-bar-inner"></div>
+        </div>
+        <div id="xp-label" class="xp-label">0 / 120 XP</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- linke Spalte: neue Quests -->
+    <section class="panel">
+      <h2>Neue Quest erstellen</h2>
+      <p class="hint">Je genauer du bist, desto mehr fühlt es sich wie ein echtes Mini-Game an.</p>
+
+      <label for="quest-title" class="field-label">Titel der Quest</label>
+      <input id="quest-title" type="text" placeholder="z.B. Küche aufräumen, 10 Minuten lesen...">
+
+      <div class="grid-2">
+        <div>
+          <label for="quest-category" class="field-label">Kategorie</label>
+          <select id="quest-category">
+            <option value="home">🏠 Home</option>
+            <option value="work">💻 Work/Schule</option>
+            <option value="selfcare">🧘 Selfcare</option>
+            <option value="social">💬 Social</option>
+          </select>
+        </div>
+        <div>
+          <label for="quest-energy" class="field-label">Energieaufwand</label>
+          <select id="quest-energy">
+            <option value="1">1 – Mini (2–5 Minuten)</option>
+            <option value="2">2 – Easy</option>
+            <option value="3">3 – Mittel</option>
+            <option value="4">4 – Anstrengend</option>
+            <option value="5">5 – Bossfight</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="quest-reward" class="field-label">Belohnung danach (optional)</label>
+      <input id="quest-reward" type="text" placeholder="z.B. Kaffee, 1 Runde zocken, 10 Min. Handy...">
+
+      <button id="add-quest-btn" class="primary-btn">Quest speichern ➕</button>
+      <p id="form-feedback" class="feedback"></p>
+    </section>
+
+    <!-- rechte Spalte: heutige Quest + Liste -->
+    <section class="panel">
+      <div class="today-quest">
+        <div class="today-quest-header">
+          <h2>Quest für jetzt</h2>
+          <button id="pick-quest-btn" class="secondary-btn">Zufällige Quest 🎲</button>
+        </div>
+        <div id="today-quest" class="today-quest-card">
+          <p class="placeholder">
+            Du hast noch keine Quest für jetzt. Erstell ein paar oder klick auf „Zufällige Quest“.
+          </p>
+        </div>
+      </div>
+
+      <div class="quest-list-wrapper">
+        <div class="quest-list-header">
+          <h2>Deine Quests</h2>
+          <div class="filters">
+            <button class="chip filter-chip active" data-filter="open">offen</button>
+            <button class="chip filter-chip" data-filter="done">erledigt</button>
+            <button class="chip filter-chip" data-filter="all">alle</button>
+          </div>
+        </div>
+        <div id="quests-list" class="quests-list">
+          <!-- wird per JS gefüllt -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>MiniQuest – weniger Prokrastination, mehr XP ✨</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
