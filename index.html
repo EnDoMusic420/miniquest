@@ -13,13 +13,29 @@
         <h1>MiniQuest</h1>
         <p>Verwandel deinen Todo-Stapel in kleine Quests mit Levelsystem.</p>
       </div>
-      <div class="level-box">
-        <div class="level-label">Level</div>
-        <div id="level-badge">1</div>
-        <div class="xp-bar">
-          <div id="xp-bar-inner"></div>
+
+      <div class="level-streak-wrap">
+        <div class="level-box">
+          <div class="level-label">Level</</div>
+          <div id="level-badge">1</div>
+          <div class="xp-bar">
+            <div id="xp-bar-inner"></div>
+          </div>
+          <div id="xp-label" class="xp-label">0 / 120 XP</div>
         </div>
-        <div id="xp-label" class="xp-label">0 / 120 XP</div>
+
+        <div class="streak-box">
+          <div class="streak-main">
+            <span id="streak-value">🔥 Streak: 0</span>
+          </div>
+          <div class="streak-sub">
+            <span id="daily-goal-label">0 / 3 Quests heute</span>
+            <div class="daily-goal-control">
+              <label for="daily-goal-input">Ziel/Tag</label>
+              <input id="daily-goal-input" type="number" min="1" max="20" value="3">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -28,7 +44,7 @@
     <!-- linke Spalte: neue Quests -->
     <section class="panel">
       <h2>Neue Quest erstellen</h2>
-      <p class="hint">Je genauer du bist, desto mehr fühlt es sich wie ein echtes Mini-Game an.</p>
+      <p class="hint">Je genauer du bist, desto mehr fühlt es sich wie ein kleines Game an.</p>
 
       <label for="quest-title" class="field-label">Titel der Quest</label>
       <input id="quest-title" type="text" placeholder="z.B. Küche aufräumen, 10 Minuten lesen...">
@@ -58,16 +74,24 @@
       <label for="quest-reward" class="field-label">Belohnung danach (optional)</label>
       <input id="quest-reward" type="text" placeholder="z.B. Kaffee, 1 Runde zocken, 10 Min. Handy...">
 
+      <div class="preset-row">
+        <button id="preset-quest-btn" class="small-pill-btn">🎯 Zufällige Alltags-Quest</button>
+        <button id="preset-reward-btn" class="small-pill-btn">🍰 Zufällige Belohnung</button>
+      </div>
+
       <button id="add-quest-btn" class="primary-btn">Quest speichern ➕</button>
       <p id="form-feedback" class="feedback"></p>
     </section>
 
-    <!-- rechte Spalte: heutige Quest + Liste -->
+    <!-- rechte Spalte: heutige Quest + Liste + Stats -->
     <section class="panel">
       <div class="today-quest">
         <div class="today-quest-header">
           <h2>Quest für jetzt</h2>
-          <button id="pick-quest-btn" class="secondary-btn">Zufällige Quest 🎲</button>
+          <div class="today-quest-actions">
+            <button id="pick-quest-btn" class="secondary-btn">Zufällige Quest 🎲</button>
+            <button id="inspire-quest-btn" class="secondary-btn ghost-btn">Motivations-Quest 💡</button>
+          </div>
         </div>
         <div id="today-quest" class="today-quest-card">
           <p class="placeholder">
@@ -85,7 +109,13 @@
             <button class="chip filter-chip" data-filter="all">alle</button>
           </div>
         </div>
-        <div id="quests-list" class="quests-list">
+        <div id="quests-list" class="quests-list"></div>
+      </div>
+
+      <div class="stats-wrapper">
+        <h2>Stats</h2>
+        <p class="hint">Kleiner Überblick, wie viel du wirklich machst.</p>
+        <div id="stats-content" class="stats-grid">
           <!-- wird per JS gefüllt -->
         </div>
       </div>
@@ -95,6 +125,20 @@
   <footer class="footer">
     <span>MiniQuest – weniger Prokrastination, mehr XP ✨</span>
   </footer>
+
+  <!-- Celebration Overlay (Daily Goal erreicht) -->
+  <div id="celebration" class="celebration">
+    <div class="celebration-card">
+      <div class="celebration-emoji">⚔️</div>
+      <div class="celebration-title">Tagesziel zerstört.</div>
+      <p id="celebration-text" class="celebration-text">
+        Du hast dein Daily-Quest-Board leergefegt. Dein zukünftiges Ich klatscht gerade.
+      </p>
+      <button id="celebration-close-btn" class="primary-btn celebration-close">
+        Weiter grinden ✌️
+      </button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
