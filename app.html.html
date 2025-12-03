@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniQuest</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="miniquest-logo.svg" type="image/svg+xml" />
+</head>
+
+<body>
+
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <div>
+        <h1>MiniQuest</h1>
+        <p>Mach deinen Alltag zum Levelsystem.</p>
+      </div>
+
+      <div class="level-streak-wrap">
+        <div class="level-box">
+          <div class="level-label">Level</div>
+          <div id="level-badge">1</div>
+          <div class="xp-bar">
+            <div id="xp-bar-inner"></div>
+          </div>
+          <div class="xp-label" id="xp-label">0/120 XP</div>
+        </div>
+
+        <div class="streak-box">
+          <div class="streak-main" id="streak-value">🔥 Streak: 0</div>
+          <div class="streak-sub">
+            <span id="daily-goal-label">0/3 Quests heute</span>
+            <span class="daily-goal-control">
+              <label for="daily-goal-input">Ziel:</label>
+              <input id="daily-goal-input" type="number" value="3" />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Button -->
+      <div class="theme-switcher">
+        <button id="theme-btn" class="theme-btn">🌞</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <h2>Neue Quest</h2>
+      <p class="hint">Erstelle neue Quests oder wähle Presets.</p>
+
+      <label class="field-label">Titel</label>
+      <input id="quest-title" type="text" placeholder="Was willst du machen?" />
+
+      <label class="field-label">Kategorie</label>
+      <select id="quest-category">
+        <option value="home">Home</option>
+        <option value="work">Work/Schule</option>
+        <option value="selfcare">Selfcare</option>
+        <option value="social">Social</option>
+      </select>
+
+      <label class="field-label">Energie</label>
+      <select id="quest-energy">
+        <option value="1">★☆☆☆☆</option>
+        <option value="2">★★☆☆☆</option>
+        <option value="3">★★★☆☆</option>
+        <option value="4">★★★★☆</option>
+        <option value="5">★★★★★</option>
+      </select>
+
+      <label class="field-label">Belohnung (optional)</label>
+      <input id="quest-reward" type="text" placeholder="Was gönnst du dir danach?" />
+
+      <button id="add-quest-btn" class="primary-btn">Quest speichern</button>
+      <div id="form-feedback" class="feedback"></div>
+
+      <h3 style="margin-top:14px;">Presets</h3>
+      <div class="preset-row">
+        <button id="preset-quest-btn" class="small-pill-btn">Zufällige Aufgabe</button>
+        <button id="preset-reward-btn" class="small-pill-btn">Zufällige Belohnung</button>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel">
+      <h2>Heute</h2>
+      <div class="today-quest" id="today-quest"></div>
+
+      <div class="today-quest-actions">
+        <button id="pick-quest-btn" class="secondary-btn">Zufällige Quest 🎲</button>
+        <button id="inspire-quest-btn" class="secondary-btn">Motivations-Quest 💡</button>
+      </div>
+
+      <h3 style="margin-top:18px;">Alle Quests</h3>
+
+      <div class="filters">
+        <span data-filter="open" class="chip filter-chip active">Offen</span>
+        <span data-filter="done" class="chip filter-chip">Erledigt</span>
+        <span data-filter="all" class="chip filter-chip">Alle</span>
+      </div>
+
+      <div id="quests-list" class="quests-list"></div>
+
+      <h3 style="margin-top:18px;">Stats</h3>
+      <div id="stats-content" class="stats-grid"></div>
+	  
+	  <h3 style="margin-top:18px;">Achievements</h3>
+      <div id="achievements-list" class="achievements-list"></div>
+
+    </div>
+  </div>
+
+  <!-- Celebration Overlay -->
+  <div id="celebration" class="celebration">
+    <div class="celebration-card">
+      <div class="celebration-emoji">✨</div>
+      <div class="celebration-title">Tagesziel erreicht!</div>
+      <div id="celebration-text" class="celebration-text">Nice!</div>
+      <button id="celebration-close-btn" class="secondary-btn celebration-close">Weiter</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <!-- SUPER SIMPLE THEME SWITCHER -->
+  <script>
+    (function () {
+      const btn = document.getElementById('theme-btn');
+      const body = document.body;
+
+      function apply(theme) {
+        body.classList.remove('theme-light', 'theme-cosy');
+
+        if (theme === 'light') {
+          body.classList.add('theme-light');
+          btn.textContent = '🌙';
+        } else if (theme === 'cosy') {
+          body.classList.add('theme-cosy');
+          btn.textContent = '☕';
+        } else {
+          btn.textContent = '🌞';
+        }
+
+        localStorage.setItem('miniquest_simple_theme', theme);
+      }
+
+      const saved = localStorage.getItem('miniquest_simple_theme') || 'dark';
+      apply(saved);
+
+      btn.addEventListener('click', () => {
+        const current = localStorage.getItem('miniquest_simple_theme') || 'dark';
+
+        if (current === 'dark') apply('light');
+        else if (current === 'light') apply('cosy');
+        else apply('dark');
+      });
+    })();
+  </script>
+
+</body>
+</html>
