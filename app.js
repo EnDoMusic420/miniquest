@@ -1,22 +1,23 @@
 // ============================
-// MiniQuest – XP + Daily Streak + Stats + Presets + Inspiration
+// MiniQuest – XP + Streak + Stats + Presets + Inspiration + Achievements + Sounds
 // ============================
 
 const STORAGE_KEY_QUESTS = "miniquest_quests_v1";
 const STORAGE_KEY_XP = "miniquest_xp_v1";
 const STORAGE_KEY_STREAK = "miniquest_streak_v1";
+const STORAGE_KEY_ACH = "miniquest_achievements_v1";
 
 let quests = [];
 let totalXp = 0;
 
-// Streak / Settings
 let streak = 0;
-let lastDate = null;      // "YYYY-MM-DD"
-let todayCount = 0;       // wie viele Quests heute erledigt
-let dailyGoal = 3;        // einstellbar
+let lastDate = null;
+let todayCount = 0;
+let dailyGoal = 3;
 let celebratedToday = false;
 
-let currentFilter = "open"; // "open" | "done" | "all"
+let currentFilter = "open";
+let unlockedAchievementIds = [];
 
 // Preset Daten
 const presetQuests = [
@@ -50,6 +51,59 @@ const inspirationQuests = [
   { title: "5 Minuten Zimmer/Raum durchlüften und kurz stehen bleiben", category: "selfcare", energy: 1, reward: "Deep Breath Moment" },
 ];
 
+// Achievements Definition
+const ACHIEVEMENTS = [
+  {
+    id: "first-quest",
+    name: "Erste Quest!",
+    description: "Du hast deine erste Quest abgeschlossen.",
+    check: (view) => view.stats.done >= 1,
+    emoji: "🥉",
+  },
+  {
+    id: "five-quests",
+    name: "Im Flow",
+    description: "5 Quests erledigt.",
+    check: (view) => view.stats.done >= 5,
+    emoji: "🥈",
+  },
+  {
+    id: "ten-quests",
+    name: "Quest Grinder",
+    description: "10 Quests erledigt.",
+    check: (view) => view.stats.done >= 10,
+    emoji: "🏅",
+  },
+  {
+    id: "streak-3",
+    name: "Drei am Stück",
+    description: "3-Tage-Streak erreicht.",
+    check: (view) => view.streak >= 3,
+    emoji: "🔥",
+  },
+  {
+    id: "streak-7",
+    name: "Eine Woche durchgezogen",
+    description: "7 Tage nacheinander aktiv.",
+    check: (view) => view.streak >= 7,
+    emoji: "⚡",
+  },
+  {
+    id: "level-3",
+    name: "Level 3",
+    description: "Level 3 erreicht.",
+    check: (view) => view.level >= 3,
+    emoji: "📈",
+  },
+  {
+    id: "level-5",
+    name: "Level 5",
+    description: "Level 5 erreicht.",
+    check: (view) => view.level >= 5,
+    emoji: "💫",
+  },
+];
+
 // DOM
 const titleInput = document.getElementById("quest-title");
 const categorySelect = document.getElementById("quest-category");
@@ -77,6 +131,7 @@ const dailyGoalLabelEl = document.getElementById("daily-goal-label");
 const dailyGoalInputEl = document.getElementById("daily-goal-input");
 
 const statsContentEl = document.getElementById("stats-content");
+const achievementsListEl = document.getElementById("achievements-list");
 
 const celebrationEl = document.getElementById("celebration");
 const celebrationTextEl = document.getElementById("celebration-text");
@@ -87,7 +142,7 @@ const celebrationCloseBtn = document.getElementById("celebration-close-btn");
 // ============================
 
 function todayString() {
-  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return new Date().toISOString().slice(0, 10);
 }
 
 function isYesterday(dateStr) {
@@ -99,6 +154,53 @@ function isYesterday(dateStr) {
 }
 
 // ============================
+// Sounds (Web Audio)
+// ============================
+
+let audioCtx = null;
+
+function playSound(type) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) {
+      audioCtx = new AC();
+    }
+    const ctx = audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    let freq = 440;
+    let duration = 0.15;
+
+    if (type === "complete") {
+      freq = 660;
+      duration = 0.13;
+    } else if (type === "achievement") {
+      freq = 880;
+      duration = 0.2;
+    } else if (type === "celebration") {
+      freq = 523.25; // C5
+      duration = 0.25;
+    }
+
+    const now = ctx.currentTime;
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  } catch (e) {
+    // ignore
+  }
+}
+
+// ============================
 // Storage helpers
 // ============================
 
@@ -107,6 +209,7 @@ function loadState() {
     const rawQuests = localStorage.getItem(STORAGE_KEY_QUESTS);
     const rawXp = localStorage.getItem(STORAGE_KEY_XP);
     const rawStreak = localStorage.getItem(STORAGE_KEY_STREAK);
+    const rawAch = localStorage.getItem(STORAGE_KEY_ACH);
 
     quests = rawQuests ? JSON.parse(rawQuests) : [];
     if (!Array.isArray(quests)) quests = [];
@@ -131,9 +234,15 @@ function loadState() {
 
     const today = todayString();
     if (lastDate !== today) {
-      // neuer Tag, Tageszähler & Celebration reset
       todayCount = 0;
       celebratedToday = false;
+    }
+
+    if (rawAch) {
+      unlockedAchievementIds = JSON.parse(rawAch) || [];
+      if (!Array.isArray(unlockedAchievementIds)) unlockedAchievementIds = [];
+    } else {
+      unlockedAchievementIds = [];
     }
   } catch (e) {
     console.error("Fehler beim Laden:", e);
@@ -144,6 +253,7 @@ function loadState() {
     todayCount = 0;
     dailyGoal = 3;
     celebratedToday = false;
+    unlockedAchievementIds = [];
   }
 
   if (dailyGoalInputEl) {
@@ -160,12 +270,16 @@ function saveState() {
   );
 }
 
+function saveAchievements() {
+  localStorage.setItem(STORAGE_KEY_ACH, JSON.stringify(unlockedAchievementIds));
+}
+
 // ============================
 // XP / Level
 // ============================
 
 function xpForEnergy(energy) {
-  return energy * 15; // 1 → 15 XP, 5 → 75 XP
+  return energy * 15;
 }
 
 function getLevelAndProgress(xp) {
@@ -179,9 +293,23 @@ function getLevelAndProgress(xp) {
 function updateLevelUi() {
   const { level, currentLevelXp, xpPerLevel, percent } = getLevelAndProgress(totalXp);
 
-  if (levelBadgeEl) levelBadgeEl.textContent = level;
-  if (xpBarInnerEl) xpBarInnerEl.style.width = `${percent}%`;
-  if (xpLabelEl) xpLabelEl.textContent = `${currentLevelXp} / ${xpPerLevel} XP`;
+  if (levelBadgeEl) {
+    levelBadgeEl.textContent = level;
+    levelBadgeEl.classList.remove("level-pop");
+    void levelBadgeEl.offsetWidth;
+    levelBadgeEl.classList.add("level-pop");
+  }
+
+  if (xpBarInnerEl) {
+    xpBarInnerEl.style.width = `${percent}%`;
+    xpBarInnerEl.classList.remove("xp-bar-anim");
+    void xpBarInnerEl.offsetWidth;
+    xpBarInnerEl.classList.add("xp-bar-anim");
+  }
+
+  if (xpLabelEl) {
+    xpLabelEl.textContent = `${currentLevelXp} / ${xpPerLevel} XP`;
+  }
 }
 
 // ============================
@@ -201,19 +329,20 @@ function updateStreakUi() {
 function triggerDailyGoalCelebration() {
   if (!celebrationEl || !celebrationTextEl || !streakValueEl) return;
 
+  playSound("celebration");
+
   const messages = [
     "Du hast dein Tagesziel nicht nur erreicht, du hast es einfach zerlegt.",
-    "Daily Done. Dein zukünftiges Ich schickt mentale High-Fives.",
-    "Dein innerer Schweinehund hat gerade leise ‚gg‘ gesagt.",
+    "Daily done. Dein zukünftiges Ich schickt mentale High-Fives.",
+    "Dein innerer Schweinehund hat gerade leise „gg“ gesagt.",
     "Tagesziel im Speedrun geschafft. Rest des Tages ist Bonus-Content.",
-    "Wenn du so weiter machst, brauchst du bald ein richtiges Level-Up-Menü."
+    "Wenn du so weiter machst, brauchst du bald ein richtiges Level-Up-Menü.",
   ];
   const randomMsg = messages[Math.floor(Math.random() * messages.length)];
   celebrationTextEl.textContent = randomMsg;
 
   celebrationEl.classList.add("visible");
 
-  // kleiner Pop am Streak
   streakValueEl.classList.remove("streak-pop");
   void streakValueEl.offsetWidth;
   streakValueEl.classList.add("streak-pop");
@@ -237,7 +366,6 @@ function handleQuestCompletedToday() {
 
   lastDate = today;
 
-  // Celebration nur einmal pro Tag, wenn Ziel erreicht oder überschritten
   if (!celebratedToday && todayCount >= dailyGoal) {
     celebratedToday = true;
     triggerDailyGoalCelebration();
@@ -283,7 +411,7 @@ function computeStats() {
     home: 0,
     work: 0,
     selfcare: 0,
-    social: 0
+    social: 0,
   };
 
   quests.forEach(q => {
@@ -307,13 +435,12 @@ function computeStats() {
     completionRate,
     weekDone,
     weekXp,
-    categoryCounts
+    categoryCounts,
   };
 }
 
 function renderStats() {
   if (!statsContentEl) return;
-
   const s = computeStats();
 
   statsContentEl.innerHTML = `
@@ -340,6 +467,90 @@ function renderStats() {
       </div>
     </div>
   `;
+}
+
+// ============================
+// Achievements
+// ============================
+
+function renderAchievementsList() {
+  if (!achievementsListEl) return;
+
+  achievementsListEl.innerHTML = "";
+
+  ACHIEVEMENTS.forEach(meta => {
+    const unlocked = unlockedAchievementIds.includes(meta.id);
+
+    const card = document.createElement("div");
+    card.className = "achievement-card" + (unlocked ? "" : " locked");
+
+    const badge = document.createElement("div");
+    badge.className = "achievement-badge " + (unlocked ? "unlocked" : "locked");
+    badge.textContent = unlocked ? meta.emoji : "🔒";
+
+    const textWrap = document.createElement("div");
+    textWrap.className = "achievement-text";
+
+    const title = document.createElement("div");
+    title.className = "achievement-title";
+    title.textContent = meta.name;
+
+    const desc = document.createElement("div");
+    desc.className = "achievement-desc";
+    desc.textContent = meta.description;
+
+    textWrap.appendChild(title);
+    textWrap.appendChild(desc);
+    card.appendChild(badge);
+    card.appendChild(textWrap);
+    achievementsListEl.appendChild(card);
+  });
+}
+
+function showAchievementToast(meta) {
+  let toast = document.getElementById("achievement-toast");
+  if (toast) {
+    toast.remove();
+  }
+  toast = document.createElement("div");
+  toast.id = "achievement-toast";
+  toast.className = "achievement-toast";
+  toast.innerHTML = `🏅 <strong>${meta.name}</strong><br><span>${meta.description}</span>`;
+  document.body.appendChild(toast);
+
+  playSound("achievement");
+
+  setTimeout(() => {
+    toast.classList.add("hide");
+  }, 2200);
+
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 2700);
+}
+
+function checkAchievements(initial = false) {
+  const stats = computeStats();
+  const level = getLevelAndProgress(totalXp).level;
+  const view = { stats, level, streak };
+
+  let changed = false;
+
+  ACHIEVEMENTS.forEach(meta => {
+    if (unlockedAchievementIds.includes(meta.id)) return;
+    if (meta.check(view)) {
+      unlockedAchievementIds.push(meta.id);
+      changed = true;
+      saveAchievements();
+      if (!initial) {
+        showAchievementToast(meta);
+      }
+    }
+  });
+
+  if (changed) {
+    renderAchievementsList();
+  }
 }
 
 // ============================
@@ -372,6 +583,13 @@ function renderQuestsList() {
     const card = document.createElement("div");
     card.className = "quest-card";
     if (q.done) card.classList.add("done");
+    if (q.justCompleted) {
+      card.classList.add("quest-card-just-completed");
+      setTimeout(() => {
+        card.classList.remove("quest-card-just-completed");
+        q.justCompleted = false;
+      }, 400);
+    }
 
     const main = document.createElement("div");
     main.className = "quest-main";
@@ -438,6 +656,9 @@ function renderTodayQuest(quest) {
   tagRow.appendChild(catTag);
   tagRow.appendChild(energyTag);
 
+  todayQuestEl.appendChild(title);
+  todayQuestEl.appendChild(tagRow);
+
   if (quest.reward) {
     const rewardP = document.createElement("div");
     rewardP.className = "today-reward";
@@ -456,12 +677,8 @@ function renderTodayQuest(quest) {
     }
   });
 
-  todayQuestEl.appendChild(title);
-  todayQuestEl.appendChild(tagRow);
   todayQuestEl.appendChild(btn);
 }
-
-// Inspiration-Ansicht (vorgegebene Quest)
 
 function renderInspirationQuest(q) {
   if (!todayQuestEl) return;
@@ -498,7 +715,6 @@ function renderInspirationQuest(q) {
     if (categorySelect) categorySelect.value = q.category;
     if (energySelect) energySelect.value = String(q.energy);
     if (rewardInput && q.reward) rewardInput.value = q.reward;
-    // kleines Feedback
     if (formFeedbackEl) {
       formFeedbackEl.textContent = "Motivations-Quest ins Formular übernommen. Du kannst sie jetzt speichern.";
       formFeedbackEl.style.color = "#7a6b5b";
@@ -535,13 +751,15 @@ function addQuest() {
     reward,
     createdAt: Date.now(),
     done: false,
-    doneAt: null
+    doneAt: null,
+    justCompleted: false,
   };
 
   quests.push(quest);
   saveState();
   renderQuestsList();
   renderStats();
+  checkAchievements(true); // noch ohne Toast
 
   formFeedbackEl.textContent = "Quest gespeichert. +1 Schritt gegen Prokrastination.";
   formFeedbackEl.style.color = "#7a6b5b";
@@ -558,12 +776,13 @@ function toggleQuestDone(id) {
     quest.done = false;
     quest.doneAt = null;
     totalXp = Math.max(0, totalXp - xpForEnergy(quest.energy));
-    // Streak bewusst nicht zurückdrehen, sonst wird's weird
   } else {
     quest.done = true;
     quest.doneAt = Date.now();
+    quest.justCompleted = true;
     totalXp += xpForEnergy(quest.energy);
     handleQuestCompletedToday();
+    playSound("complete");
   }
 
   saveState();
@@ -571,9 +790,7 @@ function toggleQuestDone(id) {
   updateStreakUi();
   renderQuestsList();
   renderStats();
-
-  const current = quests.find(q => q.id === id);
-  renderTodayQuest(current);
+  checkAchievements();
 }
 
 function completeQuest(id, fromToday = false) {
@@ -582,14 +799,17 @@ function completeQuest(id, fromToday = false) {
 
   quest.done = true;
   quest.doneAt = Date.now();
+  quest.justCompleted = true;
   totalXp += xpForEnergy(quest.energy);
   handleQuestCompletedToday();
+  playSound("complete");
 
   saveState();
   updateLevelUi();
   updateStreakUi();
   renderQuestsList();
   renderStats();
+  checkAchievements();
 
   if (fromToday) {
     renderTodayQuest(quest);
@@ -602,6 +822,7 @@ function deleteQuest(id) {
   renderQuestsList();
   renderStats();
   renderTodayQuest(null);
+  checkAchievements(true);
 }
 
 function pickRandomQuest() {
@@ -716,11 +937,15 @@ if (celebrationCloseBtn && celebrationEl) {
 // Init
 // ============================
 
-document.addEventListener("DOMContentLoaded", () => {
+function initAll() {
   loadState();
   updateLevelUi();
   updateStreakUi();
   renderQuestsList();
   renderTodayQuest(null);
   renderStats();
-});
+  renderAchievementsList();
+  checkAchievements(true); // initial, ohne Toast-Spam beim Laden
+}
+
+initAll();
